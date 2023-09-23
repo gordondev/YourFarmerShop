@@ -2,8 +2,8 @@ const { User } = require('../models/user-model');
 const {json} = require("express");
 
 class UserService {
-    async registration() {
-        return "<<WORKED>>";
+    async registration(email, password) {
+        return `EMAIL = ${email} PASSW = ${password}`;
     }
 }
 
