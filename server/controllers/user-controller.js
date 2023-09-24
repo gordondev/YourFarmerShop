@@ -1,12 +1,12 @@
 const userService = require("../service/user-service");
 
 class UserController {
-    async registration (req, res, next) {
+    async registration(req, res, next) {
         try {
-            const { email, password } = req.body;
+            const {email, password} = req.body;
 
             if (!email || !password) {
-                res.status(400).json({ error: 'Отсутствуют обязательные поля' });
+                res.status(400).json({error: 'Отсутствуют обязательные поля'});
                 return;
             }
 

@@ -1,11 +1,12 @@
-const { User } = require('../models/user-model');
-const {json} = require("express");
+const {User} = require('../models/user-model');
+const {generateUniqueValue} = require('../utils/generateUniqueValue');
 
 class UserService {
     async isUsernameUnique(username) {
-        const existingUser = await User.findOne({ where: { username } });
+        const existingUser = await User.findOne({where: {username}});
         return !existingUser;
     }
+
     async generateRandomString(length) {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         let result = '';
@@ -17,6 +18,7 @@ class UserService {
 
         return result;
     }
+
     async generateUniqueUsername() {
         const randomString = await this.generateRandomString(10);
         const username = `User-${randomString}`;
@@ -28,9 +30,11 @@ class UserService {
 
         return username;
     }
+
     async registration(email, password, deviceInfo) {
+        const salt = await generateUniqueValue();
         const username = await this.generateUniqueUsername();
-        return { user: { username, email, password } , deviceInfo };
+        return {user: {username, email, password}, deviceInfo};
     }
 }
 
