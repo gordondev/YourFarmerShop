@@ -1,5 +1,6 @@
 const {User} = require('../models/user-model');
 const {generateUniqueValue} = require('../utils/generateUniqueValue');
+const argon2Utils = require('../utils/argon2Utils');
 
 class UserService {
     async isUsernameUnique(username) {
@@ -31,10 +32,15 @@ class UserService {
         return username;
     }
 
+    async hashPassword(password, salt) {
+        return await argon2Utils.hashPassword(password, salt);
+    }
+
     async registration(email, password, deviceInfo) {
         const salt = await generateUniqueValue();
+        const hashedPassword = await this.hashPassword(password, salt);
         const username = await this.generateUniqueUsername();
-        return {user: {username, email, password}, deviceInfo};
+        return {user: {username, email, password: hashedPassword}, deviceInfo};
     }
 }
 

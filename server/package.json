@@ -9,6 +9,7 @@
   "author": "gordondev",
   "license": "ISC",
   "dependencies": {
+    "argon2": "^0.31.1",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^16.3.1",
