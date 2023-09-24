@@ -5,6 +5,7 @@ const app = express();
 const cors = require('cors');
 const sequelize = require("./db");
 const router = require("./routes/index");
+const analyzeUserAgent = require('./middlewares/userAgent-middleware');
 
 const PORT = process.env.PORT || 5000;
 
@@ -15,6 +16,7 @@ app.use(
     })
 );
 app.use(express.json());
+app.use(analyzeUserAgent);
 app.use("/api", router);
 app.get("/", (req, res) => {
     res.send("SERVER STARTED");
