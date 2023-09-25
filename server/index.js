@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const sequelize = require("./db");
+const sequelize = require("./config/database");
 const router = require("./routes/index");
 const analyzeUserAgent = require('./middlewares/userAgent-middleware');
 
