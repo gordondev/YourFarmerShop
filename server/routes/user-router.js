@@ -21,5 +21,6 @@ router.post(
     validateRequest,
     userController.registration
 );
+router.post("/login", userController.login);
 
 module.exports = router;

@@ -20,7 +20,6 @@ class TokenService {
     }
 
     async saveToken(userId, refreshToken, deviceInfo) {
-        console.log(deviceInfo);
         await Session.create({
             userId,
             refreshToken,

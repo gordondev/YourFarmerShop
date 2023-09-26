@@ -54,17 +54,32 @@ class UserService {
         }
     }
 
+    async checkExistingUserForLogin(email) {
+        const existingUser = await User.findOne({ where: { email } });
+        if (!existingUser) {
+            throw ApiError.BadRequest('Пользователь не был найден');
+        }
+        return existingUser;
+    }
+
+    async verifyPassword(password, hashedPassword) {
+        return await argon2Utils.verifyPassword(password, hashedPassword);
+    }
+
     async registration(email, password, deviceInfo) {
         try {
             await this.checkExistingUser(email);
+
             const salt = await generateUniqueValue();
             const hashedPassword = await this.hashPassword(password, salt);
             const username = await this.generateUniqueUsername();
+
             const user = await this.createUser(email, hashedPassword, username);
             const userDto = new UserDto(user);
+
             const tokens = tokenService.generateTokens(userDto);
-            console.log(tokens.refreshToken);
             await tokenService.saveToken(userDto.id, tokens.refreshToken, deviceInfo);
+
             return {tokens: tokens, user: userDto, deviceInfo};
         } catch (error) {
             if (error instanceof ApiError) {
@@ -72,6 +87,30 @@ class UserService {
             }
 
             throw ApiError.InternalServerError('Произошла ошибка при регистрации пользователя');
+        }
+    }
+
+    async login(email, password, deviceInfo) {
+        try {
+            const existingUser = await this.checkExistingUserForLogin(email);
+            const isPassEquels = await this.verifyPassword(password, existingUser.password);
+
+            if (!isPassEquels) {
+                throw ApiError.InternalServerError('Неверный пароль');
+            }
+
+            const userDto = new UserDto(existingUser);
+            const tokens = tokenService.generateTokens({ ...userDto });
+
+            await tokenService.saveToken(existingUser.id, tokens.refreshToken, deviceInfo);
+
+            return {tokens: tokens, user: userDto, deviceInfo};
+        } catch (error) {
+            if (error instanceof ApiError) {
+                throw error;
+            }
+
+            throw ApiError.InternalServerError('Произошла ошибка при авторизации');
         }
     }
 }

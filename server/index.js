@@ -6,6 +6,7 @@ const cors = require('cors');
 const sequelize = require("./config/database");
 const router = require("./routes/index");
 const analyzeUserAgent = require('./middlewares/userAgent-middleware');
+const cookieParser = require('cookie-parser');
 
 const PORT = process.env.PORT || 5000;
 
@@ -15,6 +16,7 @@ app.use(
         origin: process.env.CLIENT_URL,
     })
 );
+app.use(cookieParser());
 app.use(express.json());
 app.use(analyzeUserAgent);
 app.use("/api", router);
