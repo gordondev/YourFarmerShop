@@ -4,6 +4,7 @@ const argon2Utils = require('../utils/argon2Utils');
 const UserDto = require("../dtos/user-dto");
 const ApiError = require('../exceptions/api-error');
 const tokenService = require("./token-service");
+const mailService = require("./mail-service");
 
 class UserService {
     async isUsernameUnique(username) {
@@ -41,21 +42,12 @@ class UserService {
 
     async createUser(email, hashedPassword, username) {
         return await User.create({
-            email,
-            password: hashedPassword,
-            username,
+            email, password: hashedPassword, username,
         });
     }
 
-    async checkExistingUser(email) {
-        const existingUser = await User.findOne({where: {email}});
-        if (existingUser) {
-            throw ApiError.BadRequest('Пользователь с такой почтой уже существует');
-        }
-    }
-
     async checkExistingUserForLogin(email) {
-        const existingUser = await User.findOne({ where: { email } });
+        const existingUser = await User.findOne({where: {email}});
         if (!existingUser) {
             throw ApiError.BadRequest('Пользователь не был найден');
         }
@@ -68,7 +60,10 @@ class UserService {
 
     async registration(email, password, deviceInfo) {
         try {
-            await this.checkExistingUser(email);
+            const existingUser = await User.findOne({where: {email}});
+            if (existingUser) {
+                throw ApiError.BadRequest('Пользователь с такой почтой уже существует');
+            }
 
             const salt = await generateUniqueValue();
             const hashedPassword = await this.hashPassword(password, salt);
@@ -92,15 +87,27 @@ class UserService {
 
     async login(email, password, deviceInfo) {
         try {
-            const existingUser = await this.checkExistingUserForLogin(email);
-            const isPassEquels = await this.verifyPassword(password, existingUser.password);
+            const existingUser = await User.findOne({where: {email}});
+            if (!existingUser) {
+                throw ApiError.BadRequest('Пользователь не был найден');
+            }
 
+            const isPassEquels = await this.verifyPassword(password, existingUser.password);
             if (!isPassEquels) {
                 throw ApiError.InternalServerError('Неверный пароль');
             }
 
+            const code = '1GH35V';
             const userDto = new UserDto(existingUser);
-            const tokens = tokenService.generateTokens({ ...userDto });
+
+            try {
+                await mailService.sendActivationMail(email, userDto.username, code);
+            } catch (error) {
+                console.log(error);
+                throw ApiError.InternalServerError('Произошла ошибка при отправке письма');
+            }
+
+            const tokens = tokenService.generateTokens({...userDto});
 
             await tokenService.saveToken(existingUser.id, tokens.refreshToken, deviceInfo);
 

@@ -14,9 +14,7 @@ class UserController {
             const userData = await userService.registration(email, password, deviceInfo);
 
             res.cookie("refreshToken", userData.tokens.refreshToken, {
-                maxAge: 30 * 24 * 60 * 60 * 1000,
-                httpOnly: true,
-                secure: true
+                maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true, secure: true
             });
 
             return res.json(userData);
@@ -27,10 +25,10 @@ class UserController {
 
     async login(req, res, next) {
         try {
-            const { email, password } = req.body;
+            const {email, password} = req.body;
 
             if (!email || !password) {
-                res.status(400).json({ error: 'Отсутствуют обязательные поля' });
+                res.status(400).json({error: 'Отсутствуют обязательные поля'});
                 return;
             }
 
@@ -38,9 +36,7 @@ class UserController {
             const userData = await userService.login(email, password, deviceInfo);
 
             res.cookie("refreshToken", userData.tokens.refreshToken, {
-                maxAge: 30 * 24 * 60 * 60 * 1000,
-                httpOnly: true,
-                secure: true
+                maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true, secure: true
             });
 
             return res.json(userData);
