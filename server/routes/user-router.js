@@ -22,5 +22,6 @@ router.post(
     userController.registration
 );
 router.post("/login", userController.login);
+router.post("/verifydevice", userController.verifyDevice);
 
 module.exports = router;

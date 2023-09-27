@@ -26,6 +26,9 @@ const User = sequelize.define('users', {
         defaultValue: false,
         allowNull: false,
     },
+    verificationCode: {
+        type: DataTypes.STRING(6),
+    },
 });
 
 module.exports = {User};

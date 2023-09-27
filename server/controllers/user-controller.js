@@ -32,8 +32,20 @@ class UserController {
                 return;
             }
 
+            const userData = await userService.login(email, password);
+
+            return res.json(userData);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async verifyDevice(req, res, next) {
+        try {
+            const {email, verificationCode} = req.body;
             const deviceInfo = req.clientInfo;
-            const userData = await userService.login(email, password, deviceInfo);
+            console.log(verificationCode, email);
+            const userData = await userService.verifyDevice(email, deviceInfo, verificationCode);
 
             res.cookie("refreshToken", userData.tokens.refreshToken, {
                 maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true, secure: true

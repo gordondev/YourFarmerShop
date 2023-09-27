@@ -58,6 +58,41 @@ class UserService {
         return await argon2Utils.verifyPassword(password, hashedPassword);
     }
 
+    async generateVerificationCode() {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+
+        for (let i = 0; i < 6; i++) {
+            const randomIndex = Math.floor(Math.random() * characters.length);
+            code += characters.charAt(randomIndex);
+        }
+
+        return code;
+    }
+
+    async verifyDevice(email, deviceInfo, verificationCode) {
+        try {
+            const user = await User.findOne({where: {email, verificationCode}});
+            if (!user) {
+                console.error('Неверный код подтверждения');
+                throw 'Неверный код подтверждения';
+            }
+            const userDto = new UserDto(user);
+            console.log('Код подтверждения успешно проверен, данные о пользователе получены.');
+
+            const tokens = tokenService.generateTokens({...userDto});
+            await tokenService.saveToken(userDto.id, tokens.refreshToken, deviceInfo)
+
+            return {tokens: tokens, user: userDto, deviceInfo};
+        } catch (error) {
+            console.error('Произошла ошибка при проверке кода подтверждения и получении данных о пользователе:');
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw ApiError.InternalServerError('Произошла ошибка при проверке кода подтверждения и получении данных о пользователе');
+        }
+    }
+
     async registration(email, password, deviceInfo) {
         try {
             const existingUser = await User.findOne({where: {email}});
@@ -85,7 +120,7 @@ class UserService {
         }
     }
 
-    async login(email, password, deviceInfo) {
+    async login(email, password) {
         try {
             const existingUser = await User.findOne({where: {email}});
             if (!existingUser) {
@@ -97,7 +132,7 @@ class UserService {
                 throw ApiError.InternalServerError('Неверный пароль');
             }
 
-            const code = '1GH35V';
+            const code = await this.generateVerificationCode();
             const userDto = new UserDto(existingUser);
 
             try {
@@ -107,16 +142,13 @@ class UserService {
                 throw ApiError.InternalServerError('Произошла ошибка при отправке письма');
             }
 
-            const tokens = tokenService.generateTokens({...userDto});
+            await existingUser.update({verificationCode: code});
 
-            await tokenService.saveToken(existingUser.id, tokens.refreshToken, deviceInfo);
-
-            return {tokens: tokens, user: userDto, deviceInfo};
+            return 'На вашу почту было отправленно письмо с кодом подтверждения';
         } catch (error) {
             if (error instanceof ApiError) {
                 throw error;
             }
-
             throw ApiError.InternalServerError('Произошла ошибка при авторизации');
         }
     }
