@@ -5,6 +5,7 @@ const UserDto = require("../dtos/user-dto");
 const ApiError = require('../exceptions/api-error');
 const tokenService = require("./token-service");
 const mailService = require("./mail-service");
+const {Op} = require('sequelize');
 
 class UserService {
     async isUsernameUnique(username) {
@@ -120,9 +121,17 @@ class UserService {
         }
     }
 
-    async login(email, password) {
+    async login(emailOrUsername, password) {
         try {
-            const existingUser = await User.findOne({where: {email}});
+            const existingUser = await User.findOne({
+                where: {
+                    [Op.or]: [
+                        {email: emailOrUsername},
+                        {username: emailOrUsername}
+                    ]
+                }
+            });
+
             if (!existingUser) {
                 throw ApiError.BadRequest('Пользователь не был найден');
             }
@@ -136,7 +145,7 @@ class UserService {
             const userDto = new UserDto(existingUser);
 
             try {
-                await mailService.sendActivationMail(email, userDto.username, code);
+                await mailService.sendActivationMail(userDto.email, userDto.username, code);
             } catch (error) {
                 console.log(error);
                 throw ApiError.InternalServerError('Произошла ошибка при отправке письма');
@@ -155,3 +164,7 @@ class UserService {
 }
 
 module.exports = new UserService();
+
+
+
+

@@ -25,14 +25,14 @@ class UserController {
 
     async login(req, res, next) {
         try {
-            const {email, password} = req.body;
+            const {emailOrUsername, password} = req.body;
 
-            if (!email || !password) {
+            if (!emailOrUsername || !password) {
                 res.status(400).json({error: 'Отсутствуют обязательные поля'});
                 return;
             }
 
-            const userData = await userService.login(email, password);
+            const userData = await userService.login(emailOrUsername, password);
 
             return res.json(userData);
         } catch (error) {
