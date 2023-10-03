@@ -47,14 +47,6 @@ class UserService {
         });
     }
 
-    async checkExistingUserForLogin(email) {
-        const existingUser = await User.findOne({where: {email}});
-        if (!existingUser) {
-            throw ApiError.BadRequest('Пользователь не был найден');
-        }
-        return existingUser;
-    }
-
     async verifyPassword(password, hashedPassword) {
         return await argon2Utils.verifyPassword(password, hashedPassword);
     }
